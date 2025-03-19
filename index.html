@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boreale - Test dei Riflessi</title>
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+
+        #startButton,
+        #stopButton {
+            font-size: 20px;
+            padding: 10px 20px;
+            margin: 10px;
+        }
+
+        #reactionTime {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+
+
+
+        .contenitore {
+            position: relative;
+            min-height: 100%;
+        }
+
+        .contenuto-principale {
+            padding-bottom: 50px;
+            /* Altezza del footer */
+        }
+
+        footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100px;
+            /* Altezza del footer */
+            background-color: #746f83;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+
+
+<body>
+
+    <div id="contenitore">
+        <header>
+            <h1>Boreale - Test dei Riflessi</h1>
+        </header>
+        <main class="contenuto-principale">
+            <input type="text" id="username" placeholder="Inserisci un nome o nickname" required>
+            <button id="startButton">Avvia</button>
+            <button id="stopButton" disabled>Ferma</button>
+            <p id="reactionTime">Inserisci un nickname e premi "Avvia" per iniziare.<br><br>In alternativa utilizza i
+                tasti
+                <strong>Ctrl</strong> per
+                avviare ed <strong>Enter (Invio)</strong> per stopparlo
+            </p>
+
+            <script>
+                let startTime, timer, interval;
+                const startButton = document.getElementById('startButton');
+                const stopButton = document.getElementById('stopButton');
+                const reactionTimeDisplay = document.getElementById('reactionTime');
+                const usernameInput = document.getElementById('username');
+
+
+                function updateTimer() {
+                    reactionTimeDisplay.textContent = `Tempo trascorso: ${(performance.now() - startTime).toFixed(2)} ms`;
+                }
+
+                function startGame() {
+                    if (usernameInput.value == "") {
+                        alert("inserisci nickname");
+
+                    }
+
+                    if (startButton.disabled || !usernameInput.value.trim()) return;
+                    reactionTimeDisplay.textContent = "Attendi il via...";
+                    startButton.disabled = true;
+                    stopButton.disabled = true;
+
+                    const randomDelay = Math.floor(Math.random() * 3000) + 1000; // Da 1 a 4 secondi    
+                    timer = setTimeout(() => {
+                        startTime = performance.now();
+                        interval = setInterval(updateTimer, 10);
+                        stopButton.disabled = false;
+                        // document.getElementById('stopButton').style.color = "#00FF00";
+                    }, randomDelay);
+                }
+
+                function stopTimer() {
+                    clearInterval(interval);
+                    const reactionTime = performance.now() - startTime;
+                    reactionTimeDisplay.textContent = `Tempo di reazione: ${reactionTime.toFixed(2)} ms`;
+                    startButton.disabled = false;
+                    stopButton.disabled = true;
+
+                    // document.getElementById('stopButton').style.color = "#000000";
+
+                    const username = usernameInput.value.trim();
+                    if (username) {
+                        fetch('save_score.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: `username=${encodeURIComponent(username)}&reaction_time=${reactionTime.toFixed(2)}`
+                        }).then(response => response.text())
+                            .then(data => console.log(data));
+                    }
+                }
+
+                startButton.addEventListener('click', startGame);
+                stopButton.addEventListener('click', stopTimer);
+
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' && !stopButton.disabled) {
+                        stopTimer();
+                    } else if (event.key === 'Control') {
+                        startGame();
+                    }
+                });
+
+            </script>
+            <a href="getscores.php">Visualizza Classifica</a>
+        </main>
+        <footer>
+            <p>&copy; <span id="anno-copyright"></span> Jerry Trimarco. Tutti i diritti riservati.</p>
+            <p>Powered by <a href="https://www.webbidea.com" target="_blank">Jerry Trimarco</a></p>
+        </footer>
+        <script>
+            // Recupera l'anno corrente
+            var annoCorrente = new Date().getFullYear();
+            // Inserisce l'anno nell'elemento con id 'anno-copyright'
+            document.getElementById('anno-copyright').textContent = annoCorrente;
+        </script>
+    </div>
+
+</body>
+
+</html>
